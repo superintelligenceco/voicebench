@@ -1,0 +1,5 @@
+{
+  "test_mock_conversation_end_to_end": 0.31186893582344055,
+  "test_vad_on_one_minute_of_audio": 0.1239091008901596,
+  "test_wer_on_a_long_transcript": 0.10083460807800293
+}
