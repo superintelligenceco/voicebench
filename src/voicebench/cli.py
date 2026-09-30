@@ -1,4 +1,4 @@
-"""Command-line interface: ``voicebench run``, ``validate``, ``mock-server``, ``synth``."""
+"""Command-line interface for voicebench: run, validate, example, mock-server, and synth."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import asyncio
 import re
 import sys
 from datetime import datetime
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -85,6 +86,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     val_p = sub.add_parser("validate", help="check scenario files without running them")
     val_p.add_argument("scenarios", type=Path, nargs="+")
+
+    ex_p = sub.add_parser(
+        "example", help="print or save a bundled example scenario (omit NAME to list them)"
+    )
+    ex_p.add_argument("name", nargs="?", help="example name, for example mock-conversation")
+    ex_p.add_argument("-O", "--output", type=Path, help="write the scenario to this file")
 
     mock_p = sub.add_parser("mock-server", help="serve the mock agent over the WebSocket protocol")
     mock_p.add_argument("--host", default="127.0.0.1")
@@ -167,6 +174,37 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     return status
 
 
+def bundled_examples() -> dict[str, str]:
+    """Return the bundled example scenarios as ``{name: yaml_text}``."""
+    root = resources.files("voicebench") / "examples"
+    return {
+        entry.name.removesuffix(".yaml"): entry.read_text(encoding="utf-8")
+        for entry in sorted(root.iterdir(), key=lambda e: e.name)
+        if entry.name.endswith(".yaml")
+    }
+
+
+def _cmd_example(args: argparse.Namespace) -> int:
+    examples = bundled_examples()
+    if not args.name:
+        for name, text in examples.items():
+            description = yaml.safe_load(text).get("description", "")
+            print(f"{name:<20} {description}")
+        return EXIT_OK
+    if args.name not in examples:
+        print(
+            f"error: unknown example {args.name!r}; use one of {', '.join(examples)}",
+            file=sys.stderr,
+        )
+        return EXIT_USAGE
+    if args.output:
+        args.output.write_text(examples[args.name], encoding="utf-8")
+        print(f"wrote {args.output}")
+    else:
+        sys.stdout.write(examples[args.name])
+    return EXIT_OK
+
+
 def _cmd_mock_server(args: argparse.Namespace) -> int:
     from voicebench.mock_server import serve_forever
 
@@ -201,6 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     handlers = {
         "run": _cmd_run,
         "validate": _cmd_validate,
+        "example": _cmd_example,
         "mock-server": _cmd_mock_server,
         "synth": _cmd_synth,
     }

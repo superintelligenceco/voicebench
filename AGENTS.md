@@ -19,7 +19,10 @@ voicebench is a Python 3.11+ package that benchmarks real-time voice agents. It 
 | `src/voicebench/adapters/` | Adapter base class, registry, and built-in adapters. |
 | `src/voicebench/mock_agent.py` | The deterministic mock agent state machine. |
 | `tests/` | pytest suite. `realtime` marks tests that use the wall clock. |
+| `src/voicebench/examples/` | Example scenarios bundled into the package and the executable. Keep them identical to `examples/`. |
 | `examples/` | Scenarios and a custom adapter. |
+| `packaging/voicebench.spec` | PyInstaller spec for the standalone executable. |
+| `Dockerfile` | Container image. `.github/workflows/release.yml` builds every release artifact. |
 | `docs/` | Metric definitions, scenario reference, and adapter guide. |
 
 ## Commands

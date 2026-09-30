@@ -8,9 +8,65 @@ Measure how a real-time voice agent actually behaves in a conversation: how fast
 
 voicebench plays a scripted conversation into your agent, records both sides of the call as audio, and derives every metric from that audio with a voice activity detector. It works with any agent you can reach over a transport: a plain WebSocket that streams PCM, a LiveKit room, a Pipecat bot, or your own adapter.
 
+## Install
+
+Each release ships a standalone executable for four platforms, a container image, and a Python wheel. The executable and the image include the `mock` and `websocket` adapters. For the `livekit` and `pipecat` adapters, install the wheel with the matching extra.
+
+### Standalone executable
+
+The executable needs no Python. Download the file for your platform from the [latest release](https://github.com/superintelligenceco/voicebench/releases/latest):
+
+| Platform | Asset |
+| --- | --- |
+| Linux x86-64 (glibc 2.31 or later) | `voicebench-linux-x64` |
+| Linux ARM64 (glibc 2.31 or later) | `voicebench-linux-arm64` |
+| macOS on Apple silicon | `voicebench-macos-arm64` |
+| Windows x86-64 | `voicebench-windows-x64.exe` |
+
+```sh
+curl -fLO https://github.com/superintelligenceco/voicebench/releases/latest/download/voicebench-linux-arm64
+curl -fLO https://github.com/superintelligenceco/voicebench/releases/latest/download/SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
+chmod +x voicebench-linux-arm64
+./voicebench-linux-arm64 example mock-conversation -O demo.yaml
+./voicebench-linux-arm64 run demo.yaml
+```
+
+While the repository is private, `curl` cannot reach the release. Download with the GitHub CLI instead:
+
+```sh
+gh release download -R superintelligenceco/voicebench -p voicebench-linux-arm64 -p SHA256SUMS
+```
+
+The executables are not code-signed. On macOS, clear the quarantine flag before the first run with `xattr -d com.apple.quarantine voicebench-macos-arm64`.
+
+### Container image
+
+The image supports `linux/amd64` and `linux/arm64`. Release tags publish `:X.Y.Z` and `:latest`. Manual runs of the Release workflow publish `:edge`.
+
+```sh
+docker run --rm ghcr.io/superintelligenceco/voicebench:latest example mock-conversation > demo.yaml
+docker run --rm -v "$PWD:/work" ghcr.io/superintelligenceco/voicebench:latest run demo.yaml
+```
+
+The container works in `/work`, so mount the directory that holds your scenario there. To serve the mock agent from a container, run `docker run --rm -p 8765:8765 ghcr.io/superintelligenceco/voicebench:latest mock-server --host 0.0.0.0`.
+
+While the package is private, sign in first with `gh auth token | docker login ghcr.io -u <your-github-username> --password-stdin`.
+
+### Python package
+
+The wheel and the sdist are attached to each release. Install the wheel with pip, and add an extra for the LiveKit or Pipecat adapter:
+
+```sh
+python -m pip install "voicebench @ https://github.com/superintelligenceco/voicebench/releases/latest/download/voicebench-0.2.0-py3-none-any.whl"
+python -m pip install "voicebench[pipecat] @ https://github.com/superintelligenceco/voicebench/releases/latest/download/voicebench-0.2.0-py3-none-any.whl"
+```
+
+While the repository is private, download the wheel with `gh release download -R superintelligenceco/voicebench -p '*.whl'` and install the local file.
+
 ```console
 $ voicebench run examples/mock-conversation.yaml --no-write
-voicebench 0.1.0  scenario=mock-conversation  adapter=mock  clock=virtual  sessions=1
+voicebench 0.2.0  scenario=mock-conversation  adapter=mock  clock=virtual  sessions=1
 
 Turn         Expect   Response  TTFA    Stop    WER  Result
 -----------  -------  --------  ------  ------  ---  ------
@@ -48,6 +104,13 @@ python -m pip install .
 voicebench run examples/mock-conversation.yaml
 ```
 
+Without a clone, save the same scenario from the bundled examples, then run it:
+
+```sh
+voicebench example mock-conversation -O demo.yaml
+voicebench run demo.yaml
+```
+
 The run writes `report.json`, `report.md`, and `report.html` (with a speech timeline) to `voicebench-results/`.
 
 ## Why voicebench exists
@@ -77,6 +140,10 @@ voicebench run scenario.yaml -a websocket --url ws://127.0.0.1:8765 -n 5 --forma
 
 # Override adapter options. Values are parsed as YAML.
 voicebench run scenario.yaml -o response_delay_ms=900 -o interruptible=false
+
+# List the bundled example scenarios, or save one to a file.
+voicebench example
+voicebench example websocket -O websocket.yaml
 
 # Check scenario files without running them.
 voicebench validate examples/*.yaml

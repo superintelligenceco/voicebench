@@ -89,9 +89,11 @@ def test_synth(tmp_path: Path) -> None:
 
 
 def test_version(capsys: pytest.CaptureFixture[str]) -> None:
+    from voicebench import __version__
+
     with pytest.raises(SystemExit):
         main(["--version"])
-    assert "voicebench 0.1.0" in capsys.readouterr().out
+    assert f"voicebench {__version__}" in capsys.readouterr().out
 
 
 def test_adapter_registry() -> None:
@@ -130,3 +132,29 @@ def test_optional_adapters_fail_cleanly_without_extras() -> None:
             continue
         with pytest.raises(AdapterError, match=rf"voicebench\[{name}\]"):
             load_adapter_class(name)
+
+
+def test_bundled_examples_match_repo_examples(examples_dir: Path) -> None:
+    from voicebench.cli import bundled_examples
+
+    bundled = bundled_examples()
+    assert set(bundled) == {"mock-conversation", "websocket"}
+    for name, text in bundled.items():
+        assert text == (examples_dir / f"{name}.yaml").read_text(encoding="utf-8")
+
+
+def test_example_command(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["example"]) == 0
+    listing = capsys.readouterr().out
+    assert "mock-conversation" in listing
+    assert "websocket" in listing
+
+    assert main(["example", "mock-conversation"]) == 0
+    assert "name: mock-conversation" in capsys.readouterr().out
+
+    target = tmp_path / "demo.yaml"
+    assert main(["example", "mock-conversation", "-O", str(target)]) == 0
+    capsys.readouterr()
+    assert main(["run", str(target), "--no-write", "-q"]) == 0
+
+    assert main(["example", "nope"]) == 2

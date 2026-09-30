@@ -47,7 +47,45 @@ Tests marked `realtime` use the wall clock and a local socket, and take a few se
 
 ## Commit messages
 
-Use [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `test:`, `ci:`, `chore:`, or `refactor:`, followed by a short summary in the imperative mood. Release automation builds the changelog from these prefixes.
+Use [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `test:`, `ci:`, `chore:`, or `refactor:`, followed by a short summary in the imperative mood. Keep the prefixes accurate, because they make the changelog easy to write at release time.
+
+## Build the release artifacts locally
+
+The Release workflow builds the same artifacts. To reproduce them on your machine:
+
+```sh
+# Wheel and sdist, in dist/
+python -m pip install build
+python -m build
+
+# Standalone executable for your platform, in dist/voicebench
+python -m pip install . pyinstaller
+pyinstaller --noconfirm packaging/voicebench.spec
+./dist/voicebench example mock-conversation -O demo.yaml
+./dist/voicebench run demo.yaml
+
+# Container image
+docker build -t voicebench .
+```
+
+The executable bundles the example scenarios in `src/voicebench/examples/`. Keep those files identical to the matching files in `examples/`. A test checks this.
+
+## Cut a release
+
+Releases come from version tags. The repository does not use release-please, because the default `GITHUB_TOKEN` cannot open release pull requests or trigger tag workflows, and a tag push keeps the process to one step.
+
+1. On `main`, set the new version in `pyproject.toml` and `src/voicebench/__init__.py`, and move the `Unreleased` entries in `CHANGELOG.md` under a heading for the new version.
+2. Commit with `chore: release X.Y.Z` and push.
+3. Tag the commit and push the tag:
+
+   ```sh
+   git tag -a vX.Y.Z -m "voicebench X.Y.Z"
+   git push origin vX.Y.Z
+   ```
+
+The tag starts `.github/workflows/release.yml`. The workflow checks that the tag matches the package version, builds the wheel, the sdist, and the four executables, runs the demo scenario with each executable, and writes `SHA256SUMS`. It then creates the GitHub Release for the tag with every file attached, and pushes the container image to `ghcr.io/superintelligenceco/voicebench` as `:X.Y.Z` and `:latest`.
+
+To test the pipeline without a release, run the workflow by hand from the Actions tab or with `gh workflow run release.yml --ref main`. A manual run uploads the files as workflow run artifacts and pushes the image as `:edge` only.
 
 ## Pull requests
 
