@@ -40,6 +40,12 @@ dev = [
   "ruff>=0.6",
   "mypy>=1.11",
   "types-PyYAML",
+  "hypothesis>=6.100",
+  "pytest-benchmark>=4.0",
+]
+docs = [
+  "mkdocs-material>=9.5",
+  "mkdocstrings[python]>=0.26",
 ]
 
 [project.scripts]
@@ -74,7 +80,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra --benchmark-disable"
 markers = [
   "realtime: runs against the wall clock and a local socket (a few seconds each)",
 ]
