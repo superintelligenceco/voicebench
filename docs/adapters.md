@@ -145,6 +145,6 @@ Run it by module path:
 PYTHONPATH=. voicebench run scenario.yaml -a my_module:MyAdapter -o url=wss://example.com/agent
 ```
 
-[examples/echo_adapter.py](../examples/echo_adapter.py) is a complete adapter you can copy.
+[examples/echo_adapter.py](https://github.com/superintelligenceco/voicebench/blob/main/examples/echo_adapter.py) is a complete adapter you can copy.
 
 Keep secrets out of `describe()`, because its output goes into the report.

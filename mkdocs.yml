@@ -1,0 +1,51 @@
+site_name: voicebench
+site_description: Benchmark harness for real-time voice agents, measured from the audio.
+site_url: https://superintelligenceco.github.io/voicebench/
+repo_url: https://github.com/superintelligenceco/voicebench
+repo_name: superintelligenceco/voicebench
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.top
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Scenarios: scenarios.md
+  - Metrics: metrics.md
+  - Adapters: adapters.md
+  - FAQ: faq.md
+  - Decisions:
+      - adr/index.md
+      - adr/0001-measure-at-the-audio.md
+      - adr/0002-virtual-clock-for-the-mock-agent.md
+      - adr/0003-energy-vad-over-a-model.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+exclude_docs: |
+  demo/
