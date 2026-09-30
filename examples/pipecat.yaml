@@ -1,0 +1,27 @@
+# Benchmark a Pipecat bot that uses a WebSocket transport with
+# ProtobufFrameSerializer (experimental adapter).
+#
+#   pip install 'voicebench[pipecat]'
+#   voicebench run examples/pipecat.yaml --url ws://127.0.0.1:8765
+name: pipecat-bot
+description: A recorded question and a barge-in against a Pipecat WebSocket bot.
+sample_rate: 16000
+frame_ms: 20
+
+adapter:
+  type: pipecat
+  options:
+    url: ws://127.0.0.1:8765
+
+turns:
+  - id: question
+    audio: {file: audio/question.wav}
+    start: {after: session_start, delay_ms: 1000}
+    text: "What are your opening hours on Sunday?"
+  - id: barge-in
+    audio: {file: audio/interrupt.wav}
+    start: {after: agent_speech_start, delay_ms: 1200}
+    expect: stop
+
+assert:
+  p90_response_latency_ms: 2000

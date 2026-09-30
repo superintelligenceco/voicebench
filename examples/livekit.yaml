@@ -1,0 +1,43 @@
+# Benchmark a LiveKit Agents worker (experimental adapter).
+#
+#   pip install 'voicebench[livekit]'
+#   export LIVEKIT_URL=wss://your-project.livekit.cloud
+#   export LIVEKIT_API_KEY=...  LIVEKIT_API_SECRET=...
+#   voicebench run examples/livekit.yaml
+#
+# Synthetic signals do not trigger speech-to-text or neural VADs. Record real
+# prompts (16 kHz mono WAV) and reference them with `file:` as shown below.
+name: livekit-agent
+description: Two recorded questions and a barge-in against a dispatched LiveKit agent.
+sample_rate: 16000
+frame_ms: 20
+
+adapter:
+  type: livekit
+  options:
+    agent_name: my-agent        # the agent_name your worker registers with
+    wait_for_agent_s: 20
+
+vad:
+  agent: {threshold_db: -50}
+
+defaults:
+  response_timeout_ms: 6000
+
+turns:
+  - id: greeting
+    audio: {file: audio/hello.wav}
+    start: {after: agent_speech_end, delay_ms: 500, timeout_ms: 8000}
+    text: "Hi, can you hear me?"
+  - id: question
+    audio: {file: audio/question.wav}
+    start: {after: agent_speech_end, delay_ms: 600}
+    text: "What are your opening hours on Sunday?"
+  - id: barge-in
+    audio: {file: audio/interrupt.wav}
+    start: {after: agent_speech_start, delay_ms: 1200}
+    expect: stop
+
+assert:
+  p90_response_latency_ms: 2000
+  min_barge_in_success_rate: 1.0
