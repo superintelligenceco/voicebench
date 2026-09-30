@@ -1,0 +1,14 @@
+# Drives examples/echo_adapter.py. Every "reply" is the user's own audio played
+# back delay_ms after it started, so response latency is delay_ms minus the
+# utterance length. It exists to show the adapter API, not to measure anything.
+#   PYTHONPATH=examples voicebench run examples/echo.yaml
+name: echo
+description: A single utterance echoed back by a custom adapter.
+tail_ms: 1500
+adapter:
+  type: echo_adapter:EchoAdapter
+  options:
+    delay_ms: 1500
+turns:
+  - id: hello
+    audio: {synth: speech, duration_ms: 1000}
