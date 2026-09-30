@@ -16,6 +16,7 @@ jobs:
     name: Analyze (python)
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       security-events: write
     steps:
@@ -26,6 +27,28 @@ jobs:
         with:
           languages: python
           build-mode: none
+      # Code scanning needs GitHub Advanced Security on a private repository. Without it,
+      # keep the SARIF file as a run artifact and fail the job on any finding instead.
+      - name: Check whether code scanning uploads are available
+        id: upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/code-scanning/analyses?per_page=1" 2>&1 \
+              | grep -q "Advanced Security must be enabled"; then
+            echo "mode=never" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=always" >> "$GITHUB_OUTPUT"
+          fi
       - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:
           category: /language:python
+          upload: ${{ steps.upload.outputs.mode }}
+          output: sarif-results
+      - name: Fail on findings when uploads are not available
+        if: steps.upload.outputs.mode == 'never'
+        run: |
+          count=$(jq '[.runs[].results[]] | length' sarif-results/*.sarif)
+          echo "CodeQL findings: ${count}"
+          jq -r '.runs[].results[] | "\(.ruleId): \(.message.text) (\(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine))"' sarif-results/*.sarif
+          test "${count}" -eq 0
