@@ -2,12 +2,12 @@
 
 > voicebench is a Python benchmark harness for real-time voice agents. It plays a scripted YAML conversation into an agent through an adapter (mock, WebSocket PCM, LiveKit, Pipecat, or your own), records both sides of the call, and computes response latency, time to first audio, barge-in stop time, false barge-ins, spurious responses, talk-over, and word error rate from the recorded audio with an energy VAD. `voicebench run` exits non-zero when a scenario assertion fails, so you can gate CI on it.
 
-Releases ship standalone executables (Linux x64/arm64, macOS arm64, Windows x64), a multi-arch image at ghcr.io/superintelligenceco/voicebench, and a wheel. Install with `curl -fsSL https://raw.githubusercontent.com/superintelligenceco/voicebench/main/install.sh | sh`.
+Releases ship standalone executables (Linux x64/arm64, macOS arm64, Windows x64), a multi-arch image at ghcr.io/superintelligenceco/voicebench, and a wheel. Install with `pip install voicebench` (PyPI: https://pypi.org/project/voicebench/) or `curl -fsSL https://raw.githubusercontent.com/superintelligenceco/voicebench/main/install.sh | sh`.
 
 ## Docs
 
 - [README](https://github.com/superintelligenceco/voicebench/blob/main/README.md): install, quickstart, metrics table, scenario format, adapters
-- [Documentation site](https://superintelligenceco.github.io/voicebench/): quickstart, concepts, CLI and API reference, architecture, FAQ, ADRs
+- [Documentation site](https://superintelligenceco.github.io/voicebench/): install, architecture, CLI and Python API reference, FAQ, decision records
 - [Metrics](https://github.com/superintelligenceco/voicebench/blob/main/docs/metrics.md): VAD algorithm, metric definitions, timing resolution
 - [Scenarios](https://github.com/superintelligenceco/voicebench/blob/main/docs/scenarios.md): every YAML key, start anchors, assertions
 - [Adapters](https://github.com/superintelligenceco/voicebench/blob/main/docs/adapters.md): adapter interface and the WebSocket protocol

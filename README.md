@@ -4,13 +4,33 @@ Measure how a real-time voice agent actually behaves in a conversation: how fast
 
 [![CI](https://github.com/superintelligenceco/voicebench/actions/workflows/ci.yml/badge.svg)](https://github.com/superintelligenceco/voicebench/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/voicebench.svg)](https://pypi.org/project/voicebench/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://superintelligenceco.github.io/voicebench/)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/superintelligenceco/voicebench/badge)](https://scorecard.dev/viewer/?uri=github.com/superintelligenceco/voicebench)
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/superintelligenceco/voicebench?quickstart=1)
 
 voicebench plays a scripted conversation into your agent, records both sides of the call as audio, and derives every metric from that audio with a voice activity detector. It works with any agent you can reach over a transport: a plain WebSocket that streams PCM, a LiveKit room, a Pipecat bot, or your own adapter.
 
+![voicebench running the bundled mock conversation](docs/assets/demo.gif)
+
+Read the full documentation at [superintelligenceco.github.io/voicebench](https://superintelligenceco.github.io/voicebench/).
+
 ## Install
 
-Each release ships a standalone executable for four platforms, a container image, and a Python wheel. The executable and the image include the `mock` and `websocket` adapters. For the `livekit` and `pipecat` adapters, install the wheel with the matching extra.
+Install voicebench from PyPI, or use the standalone executable or the container image that each release ships. The executable and the image include the `mock` and `websocket` adapters. For the `livekit` and `pipecat` adapters, install the Python package with the matching extra.
+
+### Python package
+
+Install the package from [PyPI](https://pypi.org/project/voicebench/), and add an extra for the LiveKit or Pipecat adapter:
+
+```sh
+python -m pip install voicebench
+python -m pip install "voicebench[pipecat]"
+```
+
+Each GitHub Release also attaches the wheel and the sdist.
 
 ### Install script
 
@@ -54,15 +74,6 @@ docker run --rm -v "$PWD:/work" ghcr.io/superintelligenceco/voicebench:latest ru
 ```
 
 The container works in `/work`, so mount the directory that holds your scenario there. To serve the mock agent from a container, run `docker run --rm -p 8765:8765 ghcr.io/superintelligenceco/voicebench:latest mock-server --host 0.0.0.0`.
-
-### Python package
-
-The wheel and the sdist are attached to each release. Install the wheel with pip, and add an extra for the LiveKit or Pipecat adapter:
-
-```sh
-python -m pip install "voicebench @ https://github.com/superintelligenceco/voicebench/releases/latest/download/voicebench-0.2.0-py3-none-any.whl"
-python -m pip install "voicebench[pipecat] @ https://github.com/superintelligenceco/voicebench/releases/latest/download/voicebench-0.2.0-py3-none-any.whl"
-```
 
 ```console
 $ voicebench run examples/mock-conversation.yaml --no-write
@@ -118,6 +129,21 @@ The run writes `report.json`, `report.md`, and `report.html` (with a speech time
 Voice agents fail in ways that text benchmarks never see. An agent can have a fast language model and still feel slow because its endpointing waits too long. It can answer correctly and still talk over you, ignore you when you cut in, or stop mid-sentence because someone coughed. Vendor dashboards report the latency of individual pipeline stages, which does not tell you what a caller hears.
 
 voicebench measures from the outside, at the audio. It treats your agent as a black box, so the same scenario gives comparable numbers before and after you change a model, a VAD setting, or a transport, and it can gate a CI pipeline on those numbers.
+
+## How it works
+
+```mermaid
+flowchart LR
+    S[Scenario YAML] --> R[Runner]
+    R -- user audio --> A[Adapter]
+    A <--> G((Your agent))
+    A -- agent audio, events --> R
+    R -- both tracks --> V[Streaming VAD]
+    V --> M[Metrics and assertions]
+    M --> O[Reports and exit code]
+```
+
+The runner plays each turn through an adapter and records both sides of the call. The VAD finds speech in each track, and the metrics code matches agent speech to turns. Read [Architecture](https://superintelligenceco.github.io/voicebench/architecture/) for the modules and the data flow.
 
 ## Features
 
