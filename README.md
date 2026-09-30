@@ -12,6 +12,16 @@ voicebench plays a scripted conversation into your agent, records both sides of 
 
 Each release ships a standalone executable for four platforms, a container image, and a Python wheel. The executable and the image include the `mock` and `websocket` adapters. For the `livekit` and `pipecat` adapters, install the wheel with the matching extra.
 
+### Install script
+
+On Linux (x86-64 or ARM64) or macOS on Apple silicon, the install script downloads the executable for your platform from the latest release, checks it against `SHA256SUMS`, and puts it in `~/.local/bin`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/superintelligenceco/voicebench/main/install.sh | sh
+```
+
+Set `VOICEBENCH_VERSION=v0.2.0` to pin a release, or `VOICEBENCH_INSTALL_DIR` to choose another directory.
+
 ### Standalone executable
 
 The executable needs no Python. Download the file for your platform from the [latest release](https://github.com/superintelligenceco/voicebench/releases/latest):
