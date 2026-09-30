@@ -97,5 +97,5 @@ skip_covered = true
 
 [tool.mutmut]
 source_paths = ["src/voicebench/wer.py", "src/voicebench/vad.py", "src/voicebench/audio.py"]
-also_copy = ["README.md", "examples", "benchmarks", "src/voicebench/examples"]
+also_copy = ["README.md", "examples", "benchmarks", "src/voicebench"]
 pytest_add_cli_args = ["-m", "not realtime", "-p", "no:cacheprovider"]

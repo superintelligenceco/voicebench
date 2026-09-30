@@ -1,0 +1,66 @@
+name: Nightly
+
+# Runs the full suite, including the realtime tests, on every supported platform with
+# freshly resolved dependencies, so a breaking upstream release shows up within a day.
+
+on:
+  schedule:
+    - cron: "37 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Full suite (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+        python-version: ["3.11", "3.13"]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade --upgrade-strategy eager -e ".[dev]"
+      - run: python -m pip list
+      - run: pytest --cov --cov-report=term --benchmark-disable
+      - name: Run every bundled example scenario that needs no network
+        run: |
+          cd "$RUNNER_TEMP"
+          voicebench example mock-conversation -O mock.yaml
+          voicebench run mock.yaml --repeat 3 --out nightly-report
+          test -s nightly-report/report.json
+
+  docs:
+    name: Docs build with the latest MkDocs plugins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade ".[docs]"
+      - run: mkdocs build --strict
+
+  docker:
+    name: Docker compose quickstart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: docker compose build --pull --no-cache
+      - run: docker compose up --abort-on-container-exit --exit-code-from bench
+      - if: always()
+        run: docker compose down

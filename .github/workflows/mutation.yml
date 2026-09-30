@@ -1,0 +1,45 @@
+name: Mutation testing
+
+# Mutates the core pure modules (WER, VAD, and PCM conversion) with mutmut and reports
+# the surviving mutants. Scheduled weekly, because a full run takes several minutes.
+
+on:
+  schedule:
+    - cron: "11 2 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutmut:
+    name: mutmut on wer.py, vad.py, and audio.py
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e ".[dev]" "mutmut==3.8.0"
+      - run: mutmut run --max-children 4
+      - name: Publish the results to the job summary
+        if: always()
+        run: |
+          {
+            echo "## Mutation testing"
+            echo
+            echo '```text'
+            mutmut results --all true 2>&1 | awk '{print $NF}' | sort | uniq -c
+            echo '```'
+            echo
+            echo "### Surviving mutants"
+            echo
+            echo '```text'
+            mutmut results 2>&1 | head -200
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
