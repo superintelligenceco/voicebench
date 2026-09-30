@@ -4,7 +4,7 @@ VENV ?= .venv
 BIN := $(VENV)/bin
 
 .DEFAULT_GOAL := help
-.PHONY: help setup lint fmt typecheck test test-all cov bench build exe image docs docs-serve clean
+.PHONY: help setup lint fmt typecheck test test-all cov bench build exe image docs docs-serve demo clean
 
 help: ## List the available targets
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -50,6 +50,12 @@ docs: ## Build the documentation site into site/
 
 docs-serve: ## Serve the documentation site with live reload
 	$(BIN)/mkdocs serve
+
+demo: ## Record docs/assets/demo.gif from the real CLI with vhs (needs Docker)
+	docker run --rm -v "$(CURDIR):/src" --entrypoint sh ghcr.io/charmbracelet/vhs -c '\
+		set -e; apt-get update -qq >/dev/null; apt-get install -y -qq python3-venv >/dev/null; \
+		python3 -m venv /opt/vb; /opt/vb/bin/pip install -q /src; \
+		export PATH=/opt/vb/bin:$$PATH; cd /src; vhs docs/demo/demo.tape'
 
 clean: ## Remove build outputs and caches
 	rm -rf build dist site .coverage coverage.xml .pytest_cache .mypy_cache .ruff_cache .benchmarks voicebench-results
