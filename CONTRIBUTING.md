@@ -83,7 +83,7 @@ Releases come from version tags. The repository does not use release-please, bec
    git push origin vX.Y.Z
    ```
 
-The tag starts `.github/workflows/release.yml`. The workflow checks that the tag matches the package version, builds the wheel, the sdist, and the four executables, runs the demo scenario with each executable, and writes `SHA256SUMS`. It then creates the GitHub Release for the tag with every file attached, and pushes the container image to `ghcr.io/superintelligenceco/voicebench` as `:X.Y.Z` and `:latest`.
+The tag starts `.github/workflows/release.yml`. The workflow checks that the tag matches the package version, builds the wheel, the sdist, and the four executables, runs the demo scenario with each executable, and writes `SHA256SUMS`. It scans the container image with Trivy, pushes it to `ghcr.io/superintelligenceco/voicebench` as `:X.Y.Z` and `:latest`, and signs it with cosign. It writes SPDX SBOMs, attests build provenance for every file and the image, publishes the wheel and the sdist to PyPI with the `PYPI_API_TOKEN` repository secret, and then creates the GitHub Release for the tag with the notes from `CHANGELOG.md` and every file attached.
 
 To test the pipeline without a release, run the workflow by hand from the Actions tab or with `gh workflow run release.yml --ref main`. A manual run uploads the files as workflow run artifacts and pushes the image as `:edge` only.
 
