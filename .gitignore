@@ -33,6 +33,12 @@ voicebench-results/
 
 # Editors and OS
 .idea/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 *.swp
 .DS_Store
+
+# Docs and benchmarks
+site/
+.benchmarks/
