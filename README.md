@@ -32,12 +32,6 @@ chmod +x voicebench-linux-arm64
 ./voicebench-linux-arm64 run demo.yaml
 ```
 
-While the repository is private, `curl` cannot reach the release. Download with the GitHub CLI instead:
-
-```sh
-gh release download -R superintelligenceco/voicebench -p voicebench-linux-arm64 -p SHA256SUMS
-```
-
 The executables are not code-signed. On macOS, clear the quarantine flag before the first run with `xattr -d com.apple.quarantine voicebench-macos-arm64`.
 
 ### Container image
@@ -51,8 +45,6 @@ docker run --rm -v "$PWD:/work" ghcr.io/superintelligenceco/voicebench:latest ru
 
 The container works in `/work`, so mount the directory that holds your scenario there. To serve the mock agent from a container, run `docker run --rm -p 8765:8765 ghcr.io/superintelligenceco/voicebench:latest mock-server --host 0.0.0.0`.
 
-While the package is private, sign in first with `gh auth token | docker login ghcr.io -u <your-github-username> --password-stdin`.
-
 ### Python package
 
 The wheel and the sdist are attached to each release. Install the wheel with pip, and add an extra for the LiveKit or Pipecat adapter:
@@ -61,8 +53,6 @@ The wheel and the sdist are attached to each release. Install the wheel with pip
 python -m pip install "voicebench @ https://github.com/superintelligenceco/voicebench/releases/latest/download/voicebench-0.2.0-py3-none-any.whl"
 python -m pip install "voicebench[pipecat] @ https://github.com/superintelligenceco/voicebench/releases/latest/download/voicebench-0.2.0-py3-none-any.whl"
 ```
-
-While the repository is private, download the wheel with `gh release download -R superintelligenceco/voicebench -p '*.whl'` and install the local file.
 
 ```console
 $ voicebench run examples/mock-conversation.yaml --no-write
