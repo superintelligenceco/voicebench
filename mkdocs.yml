@@ -27,12 +27,32 @@ nav:
   - Scenarios: scenarios.md
   - Metrics: metrics.md
   - Adapters: adapters.md
+  - Reference:
+      - CLI: reference/cli.md
+      - Python API: reference/api.md
   - FAQ: faq.md
   - Decisions:
       - adr/index.md
       - adr/0001-measure-at-the-audio.md
       - adr/0002-virtual-clock-for-the-mock-agent.md
       - adr/0003-energy-vad-over-a-model.md
+
+hooks:
+  - docs/hooks.py
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: false
+            show_root_heading: false
+            show_root_toc_entry: false
+            members_order: source
+            docstring_style: google
+            filters: ["!^_"]
 
 markdown_extensions:
   - admonition
@@ -49,3 +69,4 @@ markdown_extensions:
 
 exclude_docs: |
   demo/
+  hooks.py
