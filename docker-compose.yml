@@ -1,0 +1,24 @@
+# Run voicebench against the bundled mock agent over a real WebSocket:
+#   docker compose up --build --abort-on-container-exit --exit-code-from bench
+# Replace the agent service with your own agent, and point --url at it.
+services:
+  agent:
+    build: .
+    image: ghcr.io/superintelligenceco/voicebench:latest
+    command: ["mock-server", "--host", "0.0.0.0", "--port", "8765"]
+    ports:
+      - "8765:8765"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8765), 1)"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  bench:
+    image: ghcr.io/superintelligenceco/voicebench:latest
+    depends_on:
+      agent:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - voicebench example websocket -O /tmp/websocket.yaml && voicebench run /tmp/websocket.yaml --url ws://agent:8765 --no-write
