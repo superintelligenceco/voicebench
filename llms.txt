@@ -1,0 +1,29 @@
+# voicebench
+
+> voicebench is a Python benchmark harness for real-time voice agents. It plays a scripted YAML conversation into an agent through an adapter (mock, WebSocket PCM, LiveKit, Pipecat, or your own), records both sides of the call, and computes response latency, time to first audio, barge-in stop time, false barge-ins, spurious responses, talk-over, and word error rate from the recorded audio with an energy VAD. `voicebench run` exits non-zero when a scenario assertion fails, so you can gate CI on it.
+
+Releases ship standalone executables (Linux x64/arm64, macOS arm64, Windows x64), a multi-arch image at ghcr.io/superintelligenceco/voicebench, and a wheel. Install with `curl -fsSL https://raw.githubusercontent.com/superintelligenceco/voicebench/main/install.sh | sh`.
+
+## Docs
+
+- [README](https://github.com/superintelligenceco/voicebench/blob/main/README.md): install, quickstart, metrics table, scenario format, adapters
+- [Documentation site](https://superintelligenceco.github.io/voicebench/): quickstart, concepts, CLI and API reference, architecture, FAQ, ADRs
+- [Metrics](https://github.com/superintelligenceco/voicebench/blob/main/docs/metrics.md): VAD algorithm, metric definitions, timing resolution
+- [Scenarios](https://github.com/superintelligenceco/voicebench/blob/main/docs/scenarios.md): every YAML key, start anchors, assertions
+- [Adapters](https://github.com/superintelligenceco/voicebench/blob/main/docs/adapters.md): adapter interface and the WebSocket protocol
+- [Changelog](https://github.com/superintelligenceco/voicebench/blob/main/CHANGELOG.md)
+
+## Key source files
+
+- [cli.py](https://github.com/superintelligenceco/voicebench/blob/main/src/voicebench/cli.py): the `voicebench` command
+- [bench.py](https://github.com/superintelligenceco/voicebench/blob/main/src/voicebench/bench.py): `run_benchmark`, the Python entry point
+- [scenario.py](https://github.com/superintelligenceco/voicebench/blob/main/src/voicebench/scenario.py): YAML parsing and validation
+- [runner.py](https://github.com/superintelligenceco/voicebench/blob/main/src/voicebench/runner.py): the session loop, frame pacing, and start anchors
+- [vad.py](https://github.com/superintelligenceco/voicebench/blob/main/src/voicebench/vad.py): streaming energy VAD
+- [metrics.py](https://github.com/superintelligenceco/voicebench/blob/main/src/voicebench/metrics.py): turn and session metrics and assertions
+- [adapters/base.py](https://github.com/superintelligenceco/voicebench/blob/main/src/voicebench/adapters/base.py): the adapter base class
+
+## Examples
+
+- [examples/mock-conversation.yaml](https://github.com/superintelligenceco/voicebench/blob/main/examples/mock-conversation.yaml): offline demo against the mock agent
+- [examples/echo_adapter.py](https://github.com/superintelligenceco/voicebench/blob/main/examples/echo_adapter.py): a complete custom adapter
