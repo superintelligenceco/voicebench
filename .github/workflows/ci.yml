@@ -31,6 +31,19 @@ jobs:
       - run: ruff format --check .
       - run: mypy
 
+  actionlint:
+    name: Lint workflows and scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The actionlint image bundles shellcheck, which also checks the run: scripts.
+      - name: actionlint
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
+      - name: shellcheck install.sh
+        run: shellcheck install.sh
+
   test:
     name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -49,9 +62,57 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       - run: python -m pip install -e ".[dev]"
-      - run: pytest --cov --cov-report=term --cov-fail-under=85
+      - run: pytest --cov --cov-report=term --cov-report=markdown:coverage.md --cov-fail-under=85
+      - name: Publish the coverage summary
+        if: always() && hashFiles('coverage.md') != ''
+        env:
+          TITLE: Coverage (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+        run: |
+          {
+            echo "## ${TITLE}"
+            echo
+            python -m coverage report --format=total | sed 's/^/Total: /; s/$/%/'
+            echo
+            cat coverage.md
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Run the example scenario through the CLI
         run: voicebench run examples/mock-conversation.yaml --no-write
+
+  bench:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e ".[dev]"
+      - name: Fail on a regression above 2x the committed baseline
+        run: python scripts/bench_check.py
+
+  docker:
+    name: Docker integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Build the image and benchmark the containerized mock agent
+        run: docker compose up --build --abort-on-container-exit --exit-code-from bench
+      - name: Run the host CLI against the containerized agent
+        run: |
+          docker compose up -d --wait agent
+          python -m pip install .
+          voicebench run examples/websocket.yaml --url ws://127.0.0.1:8765 --no-write
+      - if: always()
+        run: docker compose down
 
   build:
     name: Build distributions
